@@ -1,13 +1,11 @@
 package cl.tiendaJdr.TiendaJdrBackend.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -19,19 +17,22 @@ public class Producto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "El nombre es obligatorio")
-    @Size(max = 80, message = "El nombre no puede superar los 80 caracteres")
+    @Column(nullable = false, length = 150)
     private String nombre;
 
-    @NotBlank(message = "La descripción es obligatoria")
-    @Size(max = 150, message = "La descripción no puede superar los 150 caracteres")
+    @Column(nullable = false, columnDefinition = "text")
     private String descripcion;
 
-    @Positive(message = "El precio debe ser mayor que cero")
-    private int precio;
+    @Column(nullable = false)
+    private Long precio;
 
-    @NotBlank(message = "La imagen es obligatoria")
-    @Size(max = 255, message = "La ruta de la imagen no puede superar los 255 caracteres")
+    @Column(name = "imagen_url", nullable = false, length = 500)
     private String imagenUrl;
+
+    @Column(nullable = false)
+    private boolean activo = true;
+
+    @Column(nullable = false)
+    private boolean novedad = false;
 
 }

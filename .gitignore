@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Contexto y esquema local
+/AGENTS.md
+/database/db.sql
+/.env

@@ -5,6 +5,8 @@ public record ProductoDTO(
     Long id,
     String nombre,
     String descripcion,
-    int precio,
-    String imagenUrl
+    Long precio,
+    String imagenUrl,
+    boolean activo,
+    boolean novedad
 ) {}

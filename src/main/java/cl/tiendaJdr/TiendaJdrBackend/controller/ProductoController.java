@@ -1,7 +1,7 @@
 package cl.tiendaJdr.TiendaJdrBackend.controller;
 
 import cl.tiendaJdr.TiendaJdrBackend.dto.ProductoDTO;
-import cl.tiendaJdr.TiendaJdrBackend.model.Producto;
+import cl.tiendaJdr.TiendaJdrBackend.dto.ProductoSolicitud;
 import cl.tiendaJdr.TiendaJdrBackend.service.ProductoService;
 import jakarta.validation.Valid;
 import java.util.LinkedHashMap;
@@ -51,7 +51,7 @@ public class ProductoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductoDTO crearProducto(@Valid @RequestBody Producto datos) {
+    public ProductoDTO crearProducto(@Valid @RequestBody ProductoSolicitud datos) {
         ProductoDTO producto = productoService.crearProducto(datos);
         log.info("Se a realizado la creación del producto {} correctamente", producto.id());
         return producto;
@@ -60,7 +60,7 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ProductoDTO actualizarProducto(
         @PathVariable("id") Long id,
-        @Valid @RequestBody Producto datos
+        @Valid @RequestBody ProductoSolicitud datos
     ) {
         validarId(id);
         ProductoDTO producto = productoService.actualizarProducto(id, datos);

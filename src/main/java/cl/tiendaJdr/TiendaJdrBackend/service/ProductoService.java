@@ -1,6 +1,7 @@
 package cl.tiendaJdr.TiendaJdrBackend.service;
 
 import cl.tiendaJdr.TiendaJdrBackend.dto.ProductoDTO;
+import cl.tiendaJdr.TiendaJdrBackend.dto.ProductoSolicitud;
 import cl.tiendaJdr.TiendaJdrBackend.model.Producto;
 import cl.tiendaJdr.TiendaJdrBackend.repository.ProductoRepository;
 import java.util.List;
@@ -16,25 +17,26 @@ public class ProductoService {
     private final ProductoRepository productoRepository;
 
     public List<ProductoDTO> listarProductos() {
-        return productoRepository.findAll().stream()
+        return productoRepository.findByActivoTrue().stream()
             .map(this::aDto)
             .toList();
     }
 
     public ProductoDTO buscarProducto(Long id) {
         return productoRepository.findById(id)
+            .filter(Producto::isActivo)
             .map(this::aDto)
             .orElseThrow(() -> new NoSuchElementException("Producto no encontrado: " + id));
     }
 
-    public ProductoDTO crearProducto(Producto datos) {
+    public ProductoDTO crearProducto(ProductoSolicitud datos) {
         Producto producto = new Producto();
         copiarDatos(producto, datos);
         return aDto(productoRepository.save(producto));
     }
 
     @Transactional
-    public ProductoDTO actualizarProducto(Long id, Producto datos) {
+    public ProductoDTO actualizarProducto(Long id, ProductoSolicitud datos) {
         Producto producto = productoRepository.findById(id)
             .orElseThrow(() -> new NoSuchElementException("Producto no encontrado: " + id));
         copiarDatos(producto, datos);
@@ -45,14 +47,21 @@ public class ProductoService {
     public void eliminarProducto(Long id) {
         Producto producto = productoRepository.findById(id)
             .orElseThrow(() -> new NoSuchElementException("Producto no encontrado: " + id));
-        productoRepository.delete(producto);
+        producto.setActivo(false);
+        productoRepository.save(producto);
     }
 
-    private void copiarDatos(Producto producto, Producto datos) {
-        producto.setNombre(datos.getNombre());
-        producto.setDescripcion(datos.getDescripcion());
-        producto.setPrecio(datos.getPrecio());
-        producto.setImagenUrl(datos.getImagenUrl());
+    private void copiarDatos(Producto producto, ProductoSolicitud datos) {
+        producto.setNombre(datos.nombre());
+        producto.setDescripcion(datos.descripcion());
+        producto.setPrecio(datos.precio());
+        producto.setImagenUrl(datos.imagenUrl());
+        if (datos.activo() != null) {
+            producto.setActivo(datos.activo());
+        }
+        if (datos.novedad() != null) {
+            producto.setNovedad(datos.novedad());
+        }
     }
 
     private ProductoDTO aDto(Producto producto) {
@@ -61,7 +70,9 @@ public class ProductoService {
             producto.getNombre(),
             producto.getDescripcion(),
             producto.getPrecio(),
-            producto.getImagenUrl()
+            producto.getImagenUrl(),
+            producto.isActivo(),
+            producto.isNovedad()
         );
     }
 }

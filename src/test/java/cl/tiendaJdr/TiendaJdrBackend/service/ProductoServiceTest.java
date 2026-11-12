@@ -3,6 +3,7 @@ package cl.tiendaJdr.TiendaJdrBackend.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import cl.tiendaJdr.TiendaJdrBackend.dto.ProductoSolicitud;
 import cl.tiendaJdr.TiendaJdrBackend.model.Producto;
 import cl.tiendaJdr.TiendaJdrBackend.repository.ProductoRepository;
 import java.util.List;
@@ -18,7 +19,7 @@ class ProductoServiceTest {
 
     @Test
     void listaLosProductos() {
-        when(repositorio.findAll()).thenReturn(List.of(producto(7L, "Fallout 4")));
+        when(repositorio.findByActivoTrue()).thenReturn(List.of(producto(7L, "Fallout 4")));
 
         var productos = servicio.listarProductos();
         assertEquals(1, productos.size());
@@ -34,22 +35,24 @@ class ProductoServiceTest {
     @Test
     void devuelveElIdGeneradoAlCrear() {
         when(repositorio.save(any(Producto.class))).thenReturn(producto(7L, "Fallout 4"));
-        assertEquals(7L, servicio.crearProducto(producto(null, "Fallout 4")).id());
+        assertEquals(7L, servicio.crearProducto(solicitud("Fallout 4", null, null)).id());
     }
 
     @Test
-    void creaConLosDatosRecibidosEIgnoraElIdEnviado() {
-        Producto datos = producto(99L, "Fallout 4");
+    void creaConLosDatosRecibidosYGeneraElId() {
+        ProductoSolicitud datos = solicitud("Fallout 4", null, true);
         when(repositorio.save(any(Producto.class))).thenReturn(producto(7L, "Fallout 4"));
         servicio.crearProducto(datos);
         var captor = ArgumentCaptor.forClass(Producto.class);
         verify(repositorio).save(captor.capture());
         Producto guardado = captor.getValue();
         assertNull(guardado.getId());
-        assertEquals(datos.getNombre(), guardado.getNombre());
-        assertEquals(datos.getDescripcion(), guardado.getDescripcion());
-        assertEquals(datos.getPrecio(), guardado.getPrecio());
-        assertEquals(datos.getImagenUrl(), guardado.getImagenUrl());
+        assertTrue(guardado.isActivo());
+        assertTrue(guardado.isNovedad());
+        assertEquals(datos.nombre(), guardado.getNombre());
+        assertEquals(datos.descripcion(), guardado.getDescripcion());
+        assertEquals(datos.precio(), guardado.getPrecio());
+        assertEquals(datos.imagenUrl(), guardado.getImagenUrl());
     }
 
     @Test
@@ -57,7 +60,7 @@ class ProductoServiceTest {
         Producto existente = producto(7L, "Fallout 4");
         when(repositorio.findById(7L)).thenReturn(Optional.of(existente));
         when(repositorio.save(existente)).thenReturn(existente);
-        var actualizado = servicio.actualizarProducto(7L, producto(99L, "Fallout 4 GOTY"));
+        var actualizado = servicio.actualizarProducto(7L, solicitud("Fallout 4 GOTY", null, null));
         assertEquals(7L, actualizado.id());
         assertEquals("Fallout 4 GOTY", actualizado.nombre());
         verify(repositorio).save(existente);
@@ -67,16 +70,18 @@ class ProductoServiceTest {
     void rechazaLaActualizacionSiElProductoNoExiste() {
         when(repositorio.findById(7L)).thenReturn(Optional.empty());
         assertThrows(NoSuchElementException.class,
-            () -> servicio.actualizarProducto(7L, producto(null, "Fallout 4")));
+            () -> servicio.actualizarProducto(7L, solicitud("Fallout 4", null, null)));
         verify(repositorio, never()).save(any(Producto.class));
     }
 
     @Test
-    void eliminaElProductoEncontrado() {
+    void desactivaElProductoEncontrado() {
         Producto existente = producto(7L, "Fallout 4");
         when(repositorio.findById(7L)).thenReturn(Optional.of(existente));
         servicio.eliminarProducto(7L);
-        verify(repositorio).delete(existente);
+        assertFalse(existente.isActivo());
+        verify(repositorio).save(existente);
+        verify(repositorio, never()).delete(any(Producto.class));
     }
 
     @Test
@@ -86,12 +91,52 @@ class ProductoServiceTest {
         verify(repositorio, never()).delete(any(Producto.class));
     }
 
+    @Test
+    void ocultaUnProductoInactivoEnLaConsultaPublica() {
+        Producto inactivo = producto(7L, "Fallout 4");
+        inactivo.setActivo(false);
+        when(repositorio.findById(7L)).thenReturn(Optional.of(inactivo));
+        assertThrows(NoSuchElementException.class, () -> servicio.buscarProducto(7L));
+    }
+
+    @Test
+    void conservaLosIndicadoresCuandoLaEdicionLosOmite() {
+        Producto existente = producto(7L, "Fallout 4");
+        existente.setActivo(false);
+        existente.setNovedad(true);
+        when(repositorio.findById(7L)).thenReturn(Optional.of(existente));
+        when(repositorio.save(existente)).thenReturn(existente);
+
+        var actualizado = servicio.actualizarProducto(7L, solicitud("Fallout 4 GOTY", null, null));
+
+        assertFalse(actualizado.activo());
+        assertTrue(actualizado.novedad());
+    }
+
+    @Test
+    void permiteCambiarLosIndicadoresExplicitamente() {
+        Producto existente = producto(7L, "Fallout 4");
+        existente.setNovedad(true);
+        when(repositorio.findById(7L)).thenReturn(Optional.of(existente));
+        when(repositorio.save(existente)).thenReturn(existente);
+
+        var actualizado = servicio.actualizarProducto(7L, solicitud("Fallout 4", false, false));
+
+        assertFalse(actualizado.activo());
+        assertFalse(actualizado.novedad());
+    }
+
+    private ProductoSolicitud solicitud(String nombre, Boolean activo, Boolean novedad) {
+        return new ProductoSolicitud(nombre, "Juego de rol", 3_000_000_000L,
+            "/Image/fl4.webp", activo, novedad);
+    }
+
     private Producto producto(Long id, String nombre) {
         Producto producto = new Producto();
         producto.setId(id);
         producto.setNombre(nombre);
         producto.setDescripcion("Juego de rol");
-        producto.setPrecio(13900);
+        producto.setPrecio(13900L);
         producto.setImagenUrl("/Image/fl4.webp");
         return producto;
     }
