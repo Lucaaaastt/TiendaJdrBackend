@@ -41,13 +41,14 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void eliminarUsuario(Long id) {
+    public boolean eliminarUsuario(Long id) {
         Usuario usuario = usuarioRepository.buscarParaEliminar(id)
             .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + id));
         if (usuarioRepository.tieneVentas(id)) {
-            throw new UsuarioConVentasException();
+            return false;
         }
         usuarioRepository.delete(usuario);
+        return true;
     }
 
     private void copiarDatos(Usuario usuario, UsuarioSolicitud datos) {
@@ -58,11 +59,5 @@ public class UsuarioService {
 
     private UsuarioDTO aDto(Usuario usuario) {
         return new UsuarioDTO(usuario.getId(), usuario.getNombre(), usuario.getCorreo(), usuario.getRol());
-    }
-
-    public static class UsuarioConVentasException extends RuntimeException {
-        public UsuarioConVentasException() {
-            super("El usuario tiene ventas asociadas");
-        }
     }
 }

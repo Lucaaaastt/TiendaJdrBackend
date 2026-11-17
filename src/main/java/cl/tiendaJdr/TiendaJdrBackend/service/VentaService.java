@@ -29,7 +29,7 @@ public class VentaService {
 
     @Transactional(readOnly = true)
     public List<VentaDTO> listarVentas() {
-        return ventaRepository.findAllByOrderByIdAsc().stream().map(this::aDto).toList();
+        return ventaRepository.findAll().stream().map(this::aDto).toList();
     }
 
     @Transactional(readOnly = true)
@@ -56,11 +56,8 @@ public class VentaService {
             if (producto == null || !producto.isActivo()) {
                 throw new NoSuchElementException("Producto no disponible: " + linea.productoId());
             }
-            try {
-                total = Math.addExact(total, Math.multiplyExact(producto.getPrecio(), (long) linea.cantidad()));
-            } catch (ArithmeticException error) {
-                throw new IllegalArgumentException("El total supera el importe máximo permitido", error);
-            }
+            long subtotal = Math.multiplyExact(producto.getPrecio(), (long) linea.cantidad());
+            total = Math.addExact(total, subtotal);
 
             DetalleVenta detalle = new DetalleVenta();
             detalle.setVenta(venta);

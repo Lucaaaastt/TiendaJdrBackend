@@ -4,16 +4,12 @@ import cl.tiendaJdr.TiendaJdrBackend.dto.ProductoDTO;
 import cl.tiendaJdr.TiendaJdrBackend.dto.ProductoSolicitud;
 import cl.tiendaJdr.TiendaJdrBackend.service.ProductoService;
 import jakarta.validation.Valid;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -79,16 +75,6 @@ public class ProductoController {
     @ExceptionHandler(NoSuchElementException.class)
     public ProblemDetail productoNoEncontrado(NoSuchElementException error) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, error.getMessage());
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, Map<String, String>> datosInvalidos(MethodArgumentNotValidException error) {
-        Map<String, String> errores = new LinkedHashMap<>();
-        for (var campo : error.getBindingResult().getFieldErrors()) {
-            errores.putIfAbsent(campo.getField(), Objects.toString(campo.getDefaultMessage(), "Valor inválido"));
-        }
-        return Map.of("errores", errores);
     }
 
     private void validarId(Long id) {
