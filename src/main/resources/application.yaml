@@ -18,4 +18,4 @@ server:
 
 app:
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,https://fullstack-2-2l6gwgpjx-lt-92cb.vercel.app}
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,https://fullstack-2-jet.vercel.app}
