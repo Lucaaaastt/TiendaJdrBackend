@@ -75,6 +75,12 @@ public class VentaController {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, error.getMessage());
     }
 
+    @ExceptionHandler(ArithmeticException.class)
+    public ProblemDetail importeFueraDeLimite(ArithmeticException error) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+            "El importe de la venta supera el límite permitido");
+    }
+
     private void validarId(Long id) {
         if (id <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El ID debe ser mayor que cero");
