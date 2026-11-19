@@ -3,6 +3,7 @@ package cl.tiendaJdr.TiendaJdrBackend.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.Locale;
 
 public record UsuarioSolicitud(
     @NotBlank(message = "El nombre es obligatorio")
@@ -18,6 +19,12 @@ public record UsuarioSolicitud(
     @Size(max = 255, message = "La contraseña no puede superar los 255 caracteres")
     String contrasena
 ) {
+    public UsuarioSolicitud {
+        if (correo != null) {
+            correo = correo.trim().toLowerCase(Locale.ROOT);
+        }
+    }
+
     @Override
     public String toString() {
         return "UsuarioSolicitud[nombre=" + nombre + ", correo=" + correo + "]";

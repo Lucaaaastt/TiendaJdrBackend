@@ -4,10 +4,12 @@ import cl.tiendaJdr.TiendaJdrBackend.dto.UsuarioDTO;
 import cl.tiendaJdr.TiendaJdrBackend.dto.UsuarioSolicitud;
 import cl.tiendaJdr.TiendaJdrBackend.service.UsuarioService;
 import jakarta.validation.Valid;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -78,6 +80,21 @@ public class UsuarioController {
     @ExceptionHandler(NoSuchElementException.class)
     public ProblemDetail usuarioNoEncontrado(NoSuchElementException error) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, error.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ProblemDetail correoDuplicado(IllegalArgumentException error) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, error.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail correoDuplicadoEnBaseDeDatos(DataIntegrityViolationException error) {
+        // La restricción única también protege dos solicitudes simultáneas.
+        if (error.getMostSpecificCause() instanceof SQLException causa
+            && "23505".equals(causa.getSQLState())) {
+            return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "El correo ya está registrado");
+        }
+        throw error;
     }
 
     private void validarId(Long id) {

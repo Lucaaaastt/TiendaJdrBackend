@@ -52,6 +52,10 @@ public class UsuarioService {
     }
 
     private void copiarDatos(Usuario usuario, UsuarioSolicitud datos) {
+        var existente = usuarioRepository.findByCorreoIgnoreCase(datos.correo());
+        if (existente.isPresent() && !existente.get().getId().equals(usuario.getId())) {
+            throw new IllegalArgumentException("El correo ya está registrado");
+        }
         usuario.setNombre(datos.nombre());
         usuario.setCorreo(datos.correo());
         usuario.setContrasena(datos.contrasena());

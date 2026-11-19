@@ -107,6 +107,68 @@ class UsuarioServiceTest {
         verify(repositorio, never()).delete(any());
     }
 
+    @Test
+    void normalizaElCorreoAntesDeConsultarYGuardar() {
+        when(repositorio.save(any(Usuario.class))).thenAnswer(invocacion -> {
+            Usuario guardado = invocacion.getArgument(0);
+            guardado.setId(2L);
+            return guardado;
+        });
+
+        var creado = servicio.crearUsuario(
+            new UsuarioSolicitud("Cliente", "  CLIENTE@Ejemplo.Test  ", "clave-prueba"));
+
+        assertEquals("cliente@ejemplo.test", creado.correo());
+        verify(repositorio).findByCorreoIgnoreCase("cliente@ejemplo.test");
+    }
+
+    @Test
+    void rechazaLaCreacionConCorreoDuplicado() {
+        when(repositorio.findByCorreoIgnoreCase("cliente@ejemplo.test"))
+            .thenReturn(Optional.of(usuario()));
+
+        var error = assertThrows(IllegalArgumentException.class,
+            () -> servicio.crearUsuario(solicitud()));
+
+        assertEquals("El correo ya está registrado", error.getMessage());
+        verify(repositorio, never()).save(any());
+    }
+
+    @Test
+    void permiteEditarConservandoElCorreoPropio() {
+        Usuario existente = usuario();
+        when(repositorio.findById(2L)).thenReturn(Optional.of(existente));
+        when(repositorio.findByCorreoIgnoreCase("cliente@ejemplo.test"))
+            .thenReturn(Optional.of(existente));
+        when(repositorio.save(existente)).thenReturn(existente);
+
+        var actualizado = servicio.actualizarUsuario(2L,
+            new UsuarioSolicitud("Nombre nuevo", " CLIENTE@EJEMPLO.TEST ", "otra-clave"));
+
+        assertEquals("Nombre nuevo", actualizado.nombre());
+        assertEquals("cliente@ejemplo.test", actualizado.correo());
+        verify(repositorio).save(existente);
+    }
+
+    @Test
+    void rechazaElCorreoDeOtroUsuarioSinModificarElExistente() {
+        Usuario existente = usuario();
+        Usuario otro = usuario();
+        otro.setId(3L);
+        otro.setCorreo("otro@ejemplo.test");
+        when(repositorio.findById(2L)).thenReturn(Optional.of(existente));
+        when(repositorio.findByCorreoIgnoreCase("otro@ejemplo.test"))
+            .thenReturn(Optional.of(otro));
+
+        assertThrows(IllegalArgumentException.class, () -> servicio.actualizarUsuario(2L,
+            new UsuarioSolicitud("Nombre nuevo", " OTRO@EJEMPLO.TEST ", "otra-clave")));
+
+        assertEquals("Cliente", existente.getNombre());
+        assertEquals("cliente@ejemplo.test", existente.getCorreo());
+        assertEquals("clave-prueba", existente.getContrasena());
+        verify(repositorio, never()).save(any());
+    }
+
     private UsuarioSolicitud solicitud() {
         return new UsuarioSolicitud("Cliente", "cliente@ejemplo.test", "clave-prueba");
     }
