@@ -22,3 +22,13 @@ La definición OpenAPI está en [JSON](http://localhost:8080/v3/api-docs).
 
 Después de desplegar esta versión en Render, Swagger estará disponible en
 [Swagger UI de Render](https://tienda-jdr-backend.onrender.com/swagger-ui.html).
+
+## Registro e inicio de sesión
+
+- `POST /api/usuarios`: recibe `nombre`, `correo` y `contrasena`; crea una cuenta CLIENTE.
+- `POST /api/usuarios/login`: recibe `correo` y `contrasena`; responde con el usuario
+  (`id`, `nombre`, `correo`, `rol`) o `401` si las credenciales no coinciden.
+
+La contraseña se mantiene como String según el alcance acordado y nunca se incluye
+en la respuesta. Este login básico comprueba credenciales; todavía no emite tokens
+ni protege los demás endpoints.

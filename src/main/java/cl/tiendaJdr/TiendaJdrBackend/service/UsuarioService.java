@@ -2,10 +2,12 @@ package cl.tiendaJdr.TiendaJdrBackend.service;
 
 import cl.tiendaJdr.TiendaJdrBackend.dto.UsuarioDTO;
 import cl.tiendaJdr.TiendaJdrBackend.dto.UsuarioSolicitud;
+import cl.tiendaJdr.TiendaJdrBackend.dto.InicioSesionSolicitud;
 import cl.tiendaJdr.TiendaJdrBackend.model.Usuario;
 import cl.tiendaJdr.TiendaJdrBackend.repository.UsuarioRepository;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+
+    public Optional<UsuarioDTO> iniciarSesion(InicioSesionSolicitud datos) {
+        return usuarioRepository.findByCorreoIgnoreCase(datos.correo())
+            .filter(usuario -> datos.contrasena().equals(usuario.getContrasena()))
+            .map(this::aDto);
+    }
 
     public List<UsuarioDTO> listarUsuarios() {
         return usuarioRepository.findAll().stream().map(this::aDto).toList();

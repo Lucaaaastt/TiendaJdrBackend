@@ -2,6 +2,7 @@ package cl.tiendaJdr.TiendaJdrBackend.controller;
 
 import cl.tiendaJdr.TiendaJdrBackend.dto.UsuarioDTO;
 import cl.tiendaJdr.TiendaJdrBackend.dto.UsuarioSolicitud;
+import cl.tiendaJdr.TiendaJdrBackend.dto.InicioSesionSolicitud;
 import cl.tiendaJdr.TiendaJdrBackend.service.UsuarioService;
 import jakarta.validation.Valid;
 import java.sql.SQLException;
@@ -32,6 +33,15 @@ import org.springframework.web.server.ResponseStatusException;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+
+    @PostMapping("/login")
+    public UsuarioDTO iniciarSesion(@Valid @RequestBody InicioSesionSolicitud datos) {
+        UsuarioDTO usuario = usuarioService.iniciarSesion(datos)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                "Correo o contraseña incorrectos"));
+        log.info("Se ha realizado el inicio de sesión del usuario {} correctamente", usuario.id());
+        return usuario;
+    }
 
     @GetMapping
     public List<UsuarioDTO> listarUsuarios() {
@@ -85,6 +95,11 @@ public class UsuarioController {
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail correoDuplicado(IllegalArgumentException error) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, error.getMessage());
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ProblemDetail solicitudRechazada(ResponseStatusException error) {
+        return ProblemDetail.forStatusAndDetail(error.getStatusCode(), error.getReason());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
