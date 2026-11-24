@@ -44,6 +44,18 @@ class VentaServiceTest {
     }
 
     @Test
+    void filtraElHistorialSinConsultarLasVentasDeOtrosUsuarios() {
+        when(ventas.findByUsuarioIdOrderByFechaDescIdDesc(2L)).thenReturn(List.of(venta()));
+
+        var historial = servicio.listarVentasDeUsuario(2L);
+
+        assertEquals(1, historial.size());
+        assertEquals(2L, historial.getFirst().usuarioId());
+        assertEquals("Juego de prueba", historial.getFirst().detalles().getFirst().nombreProducto());
+        verify(ventas, never()).findAll();
+    }
+
+    @Test
     void rechazaLaBusquedaSiLaVentaNoExiste() {
         assertThrows(NoSuchElementException.class, () -> servicio.buscarVenta(99L));
     }
@@ -135,6 +147,8 @@ class VentaServiceTest {
         Producto producto = new Producto();
         producto.setId(id);
         producto.setPrecio(precio);
+        producto.setNombre("Juego de prueba");
+        producto.setImagenUrl("/Image/red2.png");
         return producto;
     }
 

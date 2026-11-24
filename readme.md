@@ -32,3 +32,10 @@ Después de desplegar esta versión en Render, Swagger estará disponible en
 La contraseña se mantiene como String según el alcance acordado y nunca se incluye
 en la respuesta. Este login básico comprueba credenciales; todavía no emite tokens
 ni protege los demás endpoints.
+
+## Comprobantes e historial
+
+`GET /api/ventas/{id}` devuelve fecha, total y precios unitarios guardados en la venta,
+junto con el nombre e imagen actuales de cada producto. Los precios no se toman del catálogo actual.
+`GET /api/ventas?usuarioId=7` filtra el historial por usuario, de más reciente a más antiguo.
+El filtro selecciona datos; no sustituye una autorización en el servidor.

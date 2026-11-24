@@ -33,6 +33,12 @@ public class VentaService {
     }
 
     @Transactional(readOnly = true)
+    public List<VentaDTO> listarVentasDeUsuario(Long usuarioId) {
+        return ventaRepository.findByUsuarioIdOrderByFechaDescIdDesc(usuarioId).stream()
+            .map(this::aDto).toList();
+    }
+
+    @Transactional(readOnly = true)
     public VentaDTO buscarVenta(Long id) {
         return ventaRepository.findById(id).map(this::aDto)
             .orElseThrow(() -> new NoSuchElementException("Venta no encontrada: " + id));
@@ -74,7 +80,8 @@ public class VentaService {
     private VentaDTO aDto(Venta venta) {
         var detalles = venta.getDetalles().stream()
             .map(detalle -> new VentaDTO.Detalle(detalle.getId(), detalle.getProducto().getId(),
-                detalle.getCantidad(), detalle.getPrecioUnitario()))
+                detalle.getCantidad(), detalle.getPrecioUnitario(),
+                detalle.getProducto().getNombre(), detalle.getProducto().getImagenUrl()))
             .toList();
         return new VentaDTO(venta.getId(), venta.getUsuario().getId(), venta.getFecha(), venta.getTotal(), detalles);
     }

@@ -35,6 +35,22 @@ class VentaControllerTest {
     }
 
     @Test
+    void permiteFiltrarElHistorialPorUsuario() throws Exception {
+        when(ventas.findByUsuarioIdOrderByFechaDescIdDesc(2L)).thenReturn(List.of());
+        mvc.perform(get("/api/ventas").param("usuarioId", "2"))
+            .andExpect(status().isOk()).andExpect(content().json("[]"));
+        verify(ventas).findByUsuarioIdOrderByFechaDescIdDesc(2L);
+        verify(ventas, never()).findAll();
+    }
+
+    @Test
+    void rechazaUnUsuarioInvalidoAlConsultarElHistorial() throws Exception {
+        mvc.perform(get("/api/ventas").param("usuarioId", "0"))
+            .andExpect(status().isBadRequest());
+        verifyNoInteractions(ventas);
+    }
+
+    @Test
     void respondeBadRequestSiElSubtotalSuperaElLimiteSinGuardarLaVenta() throws Exception {
         when(productos.findAllById(List.of(3L)))
             .thenReturn(List.of(producto(3L, Long.MAX_VALUE)));

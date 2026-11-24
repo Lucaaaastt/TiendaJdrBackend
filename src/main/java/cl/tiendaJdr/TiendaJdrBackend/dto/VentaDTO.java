@@ -10,5 +10,6 @@ public record VentaDTO(
     Long total,
     List<Detalle> detalles
 ) {
-    public record Detalle(Long id, Long productoId, Integer cantidad, Long precioUnitario) {}
+    public record Detalle(Long id, Long productoId, Integer cantidad, Long precioUnitario,
+        String nombreProducto, String imagenUrl) {}
 }
